@@ -1,107 +1,88 @@
+require_relative 'operacao'
+
 class Caixa
-attr_reader :cotacao, :total_dolar, :total_real, :operacoes
+attr_accessor :cotacao, :total_dolar, :total_real, :operacoes
 
-  def initialize(cotacao, total_dolar, total_real)
-    @cotacao = cotacao
-    @total_dolar = total_dolar
-    @total_real = total_real
+  def initialize
     @operacoes = []
+
+    print 'Cotação do dólar em reais: '
+    @cotacao = gets.to_f
+    print 'Dolares em caixa: '
+    @total_dolar = gets.to_f
+    print 'Reais em caixa: '
+    @total_real = gets.to_f
   end
 
-  def comprar_dolar
-    print 'Quantos dolares deseja comprar? $'
-    dolar = gets.to_f
+  def comprar_dolar(dolar)
     real = (dolar * cotacao)
+    operacao = Operacao.new('compra', 'dolar', cotacao, dolar)
+    operacao.valor_total(dolar, real, 'compra', 'dolar')
     if real > total_real
       puts 'Saldo insuficiente.'
       puts "Qtd dolar: #{total_dolar}, qtd real: #{total_real}"
     else
-      if confirmar(dolar, real, 'compra', 'dolar')
-        @total_dolar += dolar
-        @total_real -= real
-        @operacoes << Operacao.new('compra', 'dolar', cotacao, dolar)
+      if operacao.confirmar?
+        self.total_dolar += dolar
+        self.total_real -= real
+        operacoes << operacao
         puts "Transação efetuada com sucesso"
         puts "Qtd dolar: #{total_dolar}, qtd real: #{total_real}"
       end
     end
   end
 
-  def vender_dolar
-    print 'Quantos dolares deseja vender? $'
-    dolar = gets.to_f
+  def vender_dolar(dolar)
     real = (dolar * cotacao)
+    operacao = Operacao.new('venda', 'dolar', cotacao, dolar)
+    operacao.valor_total(dolar, real, 'venda', 'dolar')
     if dolar > total_dolar
       puts 'Saldo insuficiente.'
       puts "Qtd dolar: #{total_dolar}, qtd real: #{total_real}"
     else
-      if confirmar(dolar, real, 'venda', 'dolar')
-        @total_dolar -= dolar
-        @total_real += real
-        @operacoes << Operacao.new('venda', 'dolar', cotacao, dolar)
+      if operacao.confirmar?
+        self.total_dolar -= dolar
+        self.total_real += real
+        operacoes << operacao
         puts "Transação efetuada com sucesso"
         puts "Qtd dolar: #{total_dolar}, qtd real: #{total_real}"
       end
     end
   end
 
-  def comprar_reais
-    print 'Quantos reais deseja comprar? R$'
-    real = gets.to_f
+  def comprar_reais(real)
     dolar = (real / cotacao)
+    operacao = Operacao.new('compra', 'real', cotacao, dolar)
+    operacao.valor_total(dolar, real, 'compra', 'real')
     if dolar > total_dolar
       puts 'Saldo insuficiente.'
       puts "Qtd dolar: #{total_dolar}, qtd real: #{total_real}"
     else
-      if confirmar(dolar, real, 'compra', 'real')
-        @total_dolar -= dolar
-        @total_real += real
-        @operacoes << Operacao.new('compra', 'real', cotacao, dolar)
+      if operacao.confirmar?
+        self.total_dolar -= dolar
+        self.total_real += real
+        operacoes << operacao
         puts "Transação efetuada com sucesso"
         puts "Qtd dolar: #{total_dolar}, qtd real: #{total_real}"
       end
     end
   end
 
-  def vender_reais
-    print 'Quantos reais deseja vender? R$'
-    real = gets.to_f
+  def vender_reais(real)
     dolar = (real / cotacao)
+    operacao = Operacao.new('venda', 'real', cotacao, dolar)
+    operacao.valor_total(dolar, real, 'venda', 'real')
     if real > total_real
       puts 'Saldo insuficiente.'
       puts "Qtd dolar: #{total_dolar}, qtd real: #{total_real}"
     else
-      if confirmar(dolar, real, 'venda', 'real')
-        @total_dolar += dolar
-        @total_real -= real
-        @operacoes << Operacao.new('venda', 'real', cotacao, dolar)
+      if operacao.confirmar?
+        self.total_dolar += dolar
+        self.total_real -= real
+        operacoes << operacao
         puts "Transação efetuada com sucesso"
         puts "Qtd dolar: #{total_dolar}, qtd real: #{total_real}"
       end
-    end
-  end
-
-  def confirmar(dolar, real, operacao, moeda)
-    resposta = nil
-
-    puts "Você possui R$#{total_real} e $#{total_dolar}"
-    if operacao == 'compra' and moeda == 'dolar'
-      puts "O valor necessário para a operação é R$#{real}."
-    elsif operacao == 'compra' and moeda == 'real'
-      puts "O valor necessário para a operação é $#{dolar}."
-    elsif operacao == 'venda' and moeda == 'dolar'
-      puts "O valor necessário para a operação é $#{dolar}."
-    elsif operacao == 'venda' and moeda == 'real'
-      puts "O valor necessário para a operação é R$#{real}."
-    else
-      puts 'Operação inválida'
-    end
-    puts 'Confirmar? [S/N] '
-    resposta = gets.chomp().upcase
-    if resposta == 'S'
-      return true
-    else
-      puts 'Transação cancelada.'
-      return false
     end
   end
 

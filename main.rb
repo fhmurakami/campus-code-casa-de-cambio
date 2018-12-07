@@ -3,14 +3,8 @@ require_relative 'caixa'
 require_relative 'operacao'
 
 puts 'Bem-vindo à Casa de Câmbio'
-puts 'Cotação do dólar em reais: '
-cotacao = gets.to_f
-puts 'Dolares disponíveis: '
-total_dolar = gets.to_f
-puts 'Reais disponíveis: '
-total_real = gets.to_f
 
-caixa = Caixa.new(cotacao, total_dolar, total_real)
+caixa = Caixa.new
 
 def menu
   puts 'Escolha uma operacão:'
@@ -23,28 +17,53 @@ def menu
   puts '[7] Sair'
   puts
   print 'Operação: '
+  gets.to_i
 end
 
-opcao = 0
+def continue_and_clear
+  puts 'Pressione \'enter\' para continuar'
+  gets
+  system('clear')
+end
 
-while opcao < 7
-  menu()
-  opcao = gets.to_i
-  case opcao
+loop do
+  case menu
   when 1
-    caixa.comprar_dolar
+    print 'Quantos dolares deseja comprar? $'
+    qtd_dolar = gets.to_f
+    puts "Você possui R$#{caixa.total_real} e $#{caixa.total_dolar}"
+    caixa.comprar_dolar(qtd_dolar)
+    continue_and_clear
   when 2
-    caixa.vender_dolar
+    print 'Quantos dolares deseja vender? $'
+    qtd_dolar = gets.to_f
+    puts "Você possui R$#{caixa.total_real} e $#{caixa.total_dolar}"
+    caixa.vender_dolar(qtd_dolar)
+    continue_and_clear
   when 3
-    caixa.comprar_reais
+    print 'Quantos reais deseja comprar? R$'
+    qtd_real = gets.to_f
+    puts "Você possui R$#{caixa.total_real} e $#{caixa.total_dolar}"
+    caixa.comprar_reais(qtd_real)
+    continue_and_clear
   when 4
-    caixa.vender_reais
+    print 'Quantos reais deseja vender? R$'
+    qtd_real = gets.to_f
+    puts "Você possui R$#{caixa.total_real} e $#{caixa.total_dolar}"
+    caixa.vender_reais(qtd_real)
+    continue_and_clear
   when 5
     caixa.mostrar_operacoes
+    continue_and_clear
   when 6
     caixa.imprimir
-  else
+    continue_and_clear
+  when 7
     puts 'Programa finalizado'
     caixa.salvar
+    exit 0
+  else
+    puts 'Opção inválida'
+    continue_and_clear
   end
 end
