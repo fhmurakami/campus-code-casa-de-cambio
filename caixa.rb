@@ -1,7 +1,10 @@
+require 'sqlite3'
 require_relative 'operacao'
 
 class Caixa
 attr_accessor :cotacao, :total_dolar, :total_real, :operacoes
+
+@@db = SQLite3::Database.open "cambio.db"
 
   def initialize
     @operacoes = []
@@ -26,6 +29,7 @@ attr_accessor :cotacao, :total_dolar, :total_real, :operacoes
         self.total_dolar += dolar
         self.total_real -= real
         operacoes << operacao
+        operacao.salvar
         puts "Transação efetuada com sucesso"
         puts "Qtd dolar: #{total_dolar}, qtd real: #{total_real}"
       end
@@ -44,6 +48,7 @@ attr_accessor :cotacao, :total_dolar, :total_real, :operacoes
         self.total_dolar -= dolar
         self.total_real += real
         operacoes << operacao
+        operacao.salvar
         puts "Transação efetuada com sucesso"
         puts "Qtd dolar: #{total_dolar}, qtd real: #{total_real}"
       end
@@ -62,6 +67,7 @@ attr_accessor :cotacao, :total_dolar, :total_real, :operacoes
         self.total_dolar -= dolar
         self.total_real += real
         operacoes << operacao
+        operacao.salvar
         puts "Transação efetuada com sucesso"
         puts "Qtd dolar: #{total_dolar}, qtd real: #{total_real}"
       end
@@ -80,6 +86,7 @@ attr_accessor :cotacao, :total_dolar, :total_real, :operacoes
         self.total_dolar += dolar
         self.total_real -= real
         operacoes << operacao
+        operacao.salvar
         puts "Transação efetuada com sucesso"
         puts "Qtd dolar: #{total_dolar}, qtd real: #{total_real}"
       end
@@ -88,8 +95,8 @@ attr_accessor :cotacao, :total_dolar, :total_real, :operacoes
 
   def mostrar_operacoes
     rows = []
-    operacoes.each do |op| 
-      rows << [op.id, op.tipo, op.moeda, op.cotacao, op.total]
+    @@db.execute("SELECT * FROM transactions") do |op|
+      rows << op
     end
     @tabela_op = Terminal::Table.new :title => "Operações", :headings => ['Operação', 'Tipo', 'Moeda', 'Cotação', 'Total (US$)'], :rows => rows
     puts @tabela_op
@@ -102,9 +109,8 @@ attr_accessor :cotacao, :total_dolar, :total_real, :operacoes
     puts table
   end
 
-  def salvar
-    File.open('./operacoes.txt', 'w+') do |file|
-      file.write(@tabela_op)
-    end
+  def close
+    @@db.close
+    exit 0
   end
 end

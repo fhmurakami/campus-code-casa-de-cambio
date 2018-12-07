@@ -1,5 +1,25 @@
+require 'sqlite3'
+
 class Operacao
   attr_accessor :id, :tipo, :moeda, :cotacao, :total
+
+if File.file?('cambio.db')
+  @@db = SQLite3::Database.open "cambio.db"
+else
+  #Cria o banco de dados
+  @@db = SQLite3::Database.new "cambio.db"
+
+  #Cria a tabela
+  @rows = @@db.execute <<-SQL
+  create table transactions (
+    id integer primary key autoincrement not null,
+    tipo text not null,
+    moeda text not null, 
+    cotacao real not null,
+    total real not null
+  );
+SQL
+end
 
   @@ultimo_id = 0
 
@@ -32,5 +52,9 @@ class Operacao
     return true if resposta == 'S'
     puts 'Transação cancelada.'
     false
+  end
+
+  def salvar
+    @@db.execute("INSERT INTO transactions (tipo, moeda, cotacao, total) VALUES (?, ?, ?, ?)",[self.tipo, self.moeda, self.cotacao, self.total])
   end
 end

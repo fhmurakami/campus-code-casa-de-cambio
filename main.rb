@@ -1,6 +1,17 @@
 require 'terminal-table'
+require 'sqlite3'
+
 require_relative 'caixa'
 require_relative 'operacao'
+
+# Opções do menu:
+COMPRAR_DOLAR = 1
+VENDER_DOLAR = 2
+COMPRAR_REAL = 3
+VENDER_REAL = 4
+VER_OPERACOES = 5
+VER_CAIXA = 6
+FINALIZAR = 7
 
 puts 'Bem-vindo à Casa de Câmbio'
 
@@ -28,40 +39,39 @@ end
 
 loop do
   case menu
-  when 1
+  when COMPRAR_DOLAR
     print 'Quantos dolares deseja comprar? $'
     qtd_dolar = gets.to_f
     puts "Você possui R$#{caixa.total_real} e $#{caixa.total_dolar}"
     caixa.comprar_dolar(qtd_dolar)
     continue_and_clear
-  when 2
+  when VENDER_DOLAR
     print 'Quantos dolares deseja vender? $'
     qtd_dolar = gets.to_f
     puts "Você possui R$#{caixa.total_real} e $#{caixa.total_dolar}"
     caixa.vender_dolar(qtd_dolar)
     continue_and_clear
-  when 3
+  when COMPRAR_REAL
     print 'Quantos reais deseja comprar? R$'
     qtd_real = gets.to_f
     puts "Você possui R$#{caixa.total_real} e $#{caixa.total_dolar}"
     caixa.comprar_reais(qtd_real)
     continue_and_clear
-  when 4
+  when VENDER_REAL
     print 'Quantos reais deseja vender? R$'
     qtd_real = gets.to_f
     puts "Você possui R$#{caixa.total_real} e $#{caixa.total_dolar}"
     caixa.vender_reais(qtd_real)
     continue_and_clear
-  when 5
+  when VER_OPERACOES
     caixa.mostrar_operacoes
     continue_and_clear
-  when 6
+  when VER_CAIXA
     caixa.imprimir
     continue_and_clear
-  when 7
+  when FINALIZAR
     puts 'Programa finalizado'
-    caixa.salvar
-    exit 0
+    caixa.close
   else
     puts 'Opção inválida'
     continue_and_clear
