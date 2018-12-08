@@ -2,7 +2,7 @@ require 'sqlite3'
 require_relative 'operacao'
 
 class Caixa
-  attr_accessor :data, :cotacao, :total_dolar, :total_real, :operacoes
+  attr_accessor :data, :nome_caixa, :cotacao, :total_dolar, :total_real, :operacoes
 
   @@db = SQLite3::Database.open 'cambio.db'
 
@@ -11,6 +11,7 @@ class Caixa
     CREATE TABLE IF NOT EXISTS cashiers (
       id integer primary key autoincrement not null,
       data_caixa text not null,
+      nome_caixa text not null,
       cotacao real not null,
       qtd_dolar real not null,
       qtd_real real not null
@@ -27,11 +28,13 @@ class Caixa
       @@db = SQLite3::Database.open 'cambio.db'
       @@db.results_as_hash = true
       @@db.execute('SELECT * FROM cashiers WHERE data_caixa = ?', [@data]) do |caixa|
+        @nome_caixa = caixa['nome_caixa']
         @cotacao = caixa['cotacao']
         @total_dolar = caixa['qtd_dolar']
         @total_real = caixa['qtd_real']
       end
       @@db.close
+      puts "Caixa: #{nome_caixa}"
       puts "Cotação: #{cotacao}"
       puts "Dólares em caixa: #{total_dolar}"
       puts "Reais em caixa: #{total_real}"
@@ -58,6 +61,8 @@ class Caixa
   end
 
   def new_info
+    print 'Nome do caixa: '
+    @nome_caixa = gets.chomp
     print 'Cotação do dólar em reais: '
     @cotacao = gets.to_f
     print 'Dolares em caixa: '
@@ -69,7 +74,7 @@ class Caixa
   def novo_caixa
     new_info
     @@db = SQLite3::Database.open 'cambio.db'
-    @@db.execute('INSERT INTO cashiers (data_caixa, cotacao, qtd_dolar, qtd_real) VALUES (?, ?, ?, ?)', [@data, @cotacao, @total_dolar, @total_real])
+    @@db.execute('INSERT INTO cashiers (data_caixa, nome_caixa, cotacao, qtd_dolar, qtd_real) VALUES (?, ?, ?, ?, ?)', [@data, @nome_caixa, @cotacao, @total_dolar, @total_real])
     @@db.close
   end
 
@@ -84,7 +89,7 @@ class Caixa
   def atualizar_caixa
     new_info
     @@db = SQLite3::Database.open 'cambio.db'
-    @@db.execute('UPDATE cashiers SET data_caixa = ?, cotacao = ?, qtd_dolar = ?, qtd_real = ? WHERE data_caixa = ?', [@data, @cotacao, @total_dolar, @total_real, @data])
+    @@db.execute('UPDATE cashiers SET data_caixa = ?, nome_caixa = ?, cotacao = ?, qtd_dolar = ?, qtd_real = ? WHERE data_caixa = ?', [@data, @nome_caixa, @cotacao, @total_dolar, @total_real, @data])
     @@db.close
   end
 
@@ -182,7 +187,7 @@ class Caixa
       rows << op
     end
     # rows << [cotacao, total_dolar, total_real]
-    table = Terminal::Table.new title: 'Caixa', headings: %w[ID Data Cotação Dolares Reais], rows: rows
+    table = Terminal::Table.new title: 'Caixa', headings: %w[ID Data Nome Cotação Dolares Reais], rows: rows
     puts table
     @@db.close
   end
