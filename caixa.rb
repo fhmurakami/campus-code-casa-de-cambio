@@ -31,36 +31,60 @@ class Caixa
         @total_dolar = caixa['qtd_dolar']
         @total_real = caixa['qtd_real']
       end
+      @@db.close
       puts "Cotação: #{cotacao}"
       puts "Dólares em caixa: #{total_dolar}"
       puts "Reais em caixa: #{total_real}"
       puts
+      atualizar_caixa if atualizar_informacoes?
     else
-      print 'Cotação do dólar em reais: '
-      @cotacao = gets.to_f
-      print 'Dolares em caixa: '
-      @total_dolar = gets.to_f
-      print 'Reais em caixa: '
-      @total_real = gets.to_f
-
-      @@db = SQLite3::Database.open 'cambio.db'
-      @@db.execute('INSERT INTO cashiers (data_caixa, cotacao, qtd_dolar, qtd_real) VALUES (?, ?, ?, ?)', [@data, @cotacao, @total_dolar, @total_real])
+      novo_caixa
     end
-    @@db.close
   end
 
   def caixa_existe?
-    # data_atual = DateTime.now.strftime('%d/%m/%Y')
-
     @@db = SQLite3::Database.open 'cambio.db'
+    count = @@db.execute('SELECT COUNT(*) FROM cashiers').flatten[0]
+    return false if count.zero?
+
     @@db.results_as_hash = true
     @@db.execute('SELECT * FROM cashiers') do |caixa|
-      puts caixa[:data_caixa]
-      return true if @data == caixa[:data_caixa]
+      return true if @data == caixa['data_caixa']
 
       false
     end
 
+    @@db.close
+  end
+
+  def new_info
+    print 'Cotação do dólar em reais: '
+    @cotacao = gets.to_f
+    print 'Dolares em caixa: '
+    @total_dolar = gets.to_f
+    print 'Reais em caixa: '
+    @total_real = gets.to_f
+  end
+
+  def novo_caixa
+    new_info
+    @@db = SQLite3::Database.open 'cambio.db'
+    @@db.execute('INSERT INTO cashiers (data_caixa, cotacao, qtd_dolar, qtd_real) VALUES (?, ?, ?, ?)', [@data, @cotacao, @total_dolar, @total_real])
+    @@db.close
+  end
+
+  def atualizar_informacoes?
+    print 'Deseja atualizar as informações? [S/N] '
+    resposta = gets.chomp.upcase
+    return true if resposta == 'S'
+
+    false
+  end
+
+  def atualizar_caixa
+    new_info
+    @@db = SQLite3::Database.open 'cambio.db'
+    @@db.execute('UPDATE cashiers SET data_caixa = ?, cotacao = ?, qtd_dolar = ?, qtd_real = ? WHERE data_caixa = ?', [@data, @cotacao, @total_dolar, @total_real, @data])
     @@db.close
   end
 
@@ -153,9 +177,14 @@ class Caixa
 
   def imprimir
     rows = []
-    rows << [cotacao, total_dolar, total_real]
-    table = Terminal::Table.new title: 'Caixa', headings: %w[Cotação Dolares Reais], rows: rows
+    @@db = SQLite3::Database.open 'cambio.db'
+    @@db.execute('SELECT * FROM cashiers') do |op|
+      rows << op
+    end
+    # rows << [cotacao, total_dolar, total_real]
+    table = Terminal::Table.new title: 'Caixa', headings: %w[ID Data Cotação Dolares Reais], rows: rows
     puts table
+    @@db.close
   end
 
   def close
