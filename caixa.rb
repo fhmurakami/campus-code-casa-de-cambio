@@ -217,11 +217,35 @@ class Caixa
   def imprimir
     rows = []
     @@db = SQLite3::Database.open 'cambio.db'
+    @@db.execute('SELECT * FROM cashiers WHERE id = ?', [@caixa_id]) do |op|
+      rows << op
+    end
+    table = Terminal::Table.new title: 'Caixa', headings: %w[ID Data Nome Cotação Dolares Reais], rows: rows
+    puts table
+    @@db.close
+  end
+
+  def exibir_caixas
+    rows = []
+    @@db = SQLite3::Database.open 'cambio.db'
     @@db.execute('SELECT * FROM cashiers') do |op|
       rows << op
     end
     table = Terminal::Table.new title: 'Caixa', headings: %w[ID Data Nome Cotação Dolares Reais], rows: rows
     puts table
+    @@db.close
+  end
+
+  def trocar_caixa(id_caixa)
+    @@db = SQLite3::Database.open 'cambio.db'
+    @@db.results_as_hash = true
+    @@db.execute('SELECT * FROM cashiers WHERE id = ?', [id_caixa]) do |caixa|
+      @caixa_id = caixa['id']
+      @nome_caixa = caixa['nome_caixa']
+      @cotacao = caixa['cotacao']
+      @total_dolar = caixa['qtd_dolar']
+      @total_real = caixa['qtd_real']
+    end
     @@db.close
   end
 

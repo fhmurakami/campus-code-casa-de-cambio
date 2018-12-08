@@ -11,7 +11,8 @@ COMPRAR_REAL = 3
 VENDER_REAL = 4
 VER_OPERACOES = 5
 VER_CAIXA = 6
-FINALIZAR = 7
+TROCAR_CAIXA = 7
+FINALIZAR = 8
 
 puts 'Bem-vindo à Casa de Câmbio'
 puts
@@ -26,7 +27,8 @@ def menu
   puts '[4] Vender reais'
   puts '[5] Ver operações do dia'
   puts '[6] Ver situação do caixa'
-  puts '[7] Sair'
+  puts '[7] Trocar caixa'
+  puts '[8] Sair'
   puts
   print 'Operação: '
   gets.to_i
@@ -69,6 +71,12 @@ loop do
     continue_and_clear
   when VER_CAIXA
     caixa.imprimir
+    continue_and_clear
+  when TROCAR_CAIXA
+    caixa.exibir_caixas
+    print 'Digite o ID do caixa que deseja selecionar: '
+    id_caixa = gets.to_i
+    caixa.trocar_caixa(id_caixa)
     continue_and_clear
   when FINALIZAR
     puts 'Programa finalizado'
