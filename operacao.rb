@@ -12,7 +12,9 @@ class Operacao
       tipo text not null,
       moeda text not null,
       cotacao real not null,
-      total real not null
+      total real not null,
+      caixa_id integer not null,
+      FOREIGN KEY (caixa_id) REFERENCES cashiers(id)
     );
   SQL
 
@@ -48,9 +50,9 @@ class Operacao
     false
   end
 
-  def salvar
+  def salvar(caixa_id)
     @@db = SQLite3::Database.open 'cambio.db'
-    @@db.execute('INSERT INTO transactions (tipo, moeda, cotacao, total) VALUES (?, ?, ?, ?)', [tipo, moeda, cotacao, total])
+    @@db.execute('INSERT INTO transactions (tipo, moeda, cotacao, total, caixa_id) VALUES (?, ?, ?, ?, ?)', [tipo, moeda, cotacao, total, caixa_id])
     @@db.close
   end
 end

@@ -14,6 +14,7 @@ VER_CAIXA = 6
 FINALIZAR = 7
 
 puts 'Bem-vindo à Casa de Câmbio'
+puts
 
 caixa = Caixa.new
 

@@ -25,24 +25,33 @@ class Caixa
     @data = DateTime.now.strftime('%d/%m/%Y')
 
     if caixa_existe?
-      @@db = SQLite3::Database.open 'cambio.db'
-      @@db.results_as_hash = true
-      @@db.execute('SELECT * FROM cashiers WHERE data_caixa = ?', [@data]) do |caixa|
-        @nome_caixa = caixa['nome_caixa']
-        @cotacao = caixa['cotacao']
-        @total_dolar = caixa['qtd_dolar']
-        @total_real = caixa['qtd_real']
-      end
-      @@db.close
+      pegar_info
       puts "Caixa: #{nome_caixa}"
       puts "Cotação: #{cotacao}"
       puts "Dólares em caixa: #{total_dolar}"
       puts "Reais em caixa: #{total_real}"
       puts
-      atualizar_caixa if atualizar_informacoes?
+      if atualizar_informacoes?
+        atualizar_caixa
+      elsif novo_caixa?
+        criar_caixa
+      end
     else
-      novo_caixa
+      criar_caixa
     end
+  end
+
+  def pegar_info
+    @@db = SQLite3::Database.open 'cambio.db'
+    @@db.results_as_hash = true
+    @@db.execute('SELECT * FROM cashiers WHERE data_caixa = ?', [@data]) do |caixa|
+      @caixa_id = caixa['id']
+      @nome_caixa = caixa['nome_caixa']
+      @cotacao = caixa['cotacao']
+      @total_dolar = caixa['qtd_dolar']
+      @total_real = caixa['qtd_real']
+    end
+    @@db.close
   end
 
   def caixa_existe?
@@ -69,28 +78,47 @@ class Caixa
     @total_dolar = gets.to_f
     print 'Reais em caixa: '
     @total_real = gets.to_f
+    puts
   end
 
-  def novo_caixa
+  def criar_caixa
     new_info
     @@db = SQLite3::Database.open 'cambio.db'
     @@db.execute('INSERT INTO cashiers (data_caixa, nome_caixa, cotacao, qtd_dolar, qtd_real) VALUES (?, ?, ?, ?, ?)', [@data, @nome_caixa, @cotacao, @total_dolar, @total_real])
     @@db.close
-  end
-
-  def atualizar_informacoes?
-    print 'Deseja atualizar as informações? [S/N] '
-    resposta = gets.chomp.upcase
-    return true if resposta == 'S'
-
-    false
+    pegar_info
   end
 
   def atualizar_caixa
     new_info
     @@db = SQLite3::Database.open 'cambio.db'
-    @@db.execute('UPDATE cashiers SET data_caixa = ?, nome_caixa = ?, cotacao = ?, qtd_dolar = ?, qtd_real = ? WHERE data_caixa = ?', [@data, @nome_caixa, @cotacao, @total_dolar, @total_real, @data])
+    @@db.execute('UPDATE cashiers SET data_caixa = ?, nome_caixa = ?, cotacao = ?, qtd_dolar = ?, qtd_real = ? WHERE id = ?', [@data, @nome_caixa, @cotacao, @total_dolar, @total_real, @caixa_id])
     @@db.close
+    pegar_info
+  end
+
+  def atualizar_total
+    @@db = SQLite3::Database.open 'cambio.db'
+    @@db.execute('UPDATE cashiers SET qtd_dolar = ?, qtd_real = ? WHERE id = ?', [@total_dolar, @total_real, @caixa_id])
+    @@db.close
+  end
+
+  def novo_caixa?
+    print 'Deseja criar um novo caixa? [S/N] '
+    resposta = gets.chomp.upcase
+    puts
+    return true if resposta == 'S'
+
+    false
+  end
+
+  def atualizar_informacoes?
+    print 'Deseja atualizar as informações? [S/N] '
+    resposta = gets.chomp.upcase
+    puts
+    return true if resposta == 'S'
+
+    false
   end
 
   def comprar_dolar(dolar)
@@ -105,7 +133,8 @@ class Caixa
         self.total_dolar += dolar
         self.total_real -= real
         operacoes << operacao
-        operacao.salvar
+        operacao.salvar(@caixa_id)
+        atualizar_total
         puts 'Transação efetuada com sucesso'
         puts "Qtd dolar: #{total_dolar}, qtd real: #{total_real}"
       end
@@ -124,7 +153,8 @@ class Caixa
         self.total_dolar -= dolar
         self.total_real += real
         operacoes << operacao
-        operacao.salvar
+        operacao.salvar(@caixa_id)
+        atualizar_total
         puts 'Transação efetuada com sucesso'
         puts "Qtd dolar: #{total_dolar}, qtd real: #{total_real}"
       end
@@ -143,7 +173,8 @@ class Caixa
         self.total_dolar -= dolar
         self.total_real += real
         operacoes << operacao
-        operacao.salvar
+        operacao.salvar(@caixa_id)
+        atualizar_total
         puts 'Transação efetuada com sucesso'
         puts "Qtd dolar: #{total_dolar}, qtd real: #{total_real}"
       end
@@ -162,7 +193,8 @@ class Caixa
         self.total_dolar += dolar
         self.total_real -= real
         operacoes << operacao
-        operacao.salvar
+        operacao.salvar(@caixa_id)
+        atualizar_total
         puts 'Transação efetuada com sucesso'
         puts "Qtd dolar: #{total_dolar}, qtd real: #{total_real}"
       end
@@ -172,10 +204,12 @@ class Caixa
   def mostrar_operacoes
     rows = []
     @@db = SQLite3::Database.open 'cambio.db'
-    @@db.execute('SELECT * FROM transactions') do |op|
+    @@db.execute('SELECT * FROM transactions WHERE caixa_id = ?', [@caixa_id]) do |op|
+      op.pop
+      op << @nome_caixa
       rows << op
     end
-    @tabela_op = Terminal::Table.new title: 'Operações', headings: ['Operação', 'Tipo', 'Moeda', 'Cotação', 'Total (US$)'], rows: rows
+    @tabela_op = Terminal::Table.new title: 'Operações', headings: ['Operação', 'Tipo', 'Moeda', 'Cotação', 'Total (US$)', 'Nome do Caixa'], rows: rows
     puts @tabela_op
     @@db.close
   end
@@ -186,7 +220,6 @@ class Caixa
     @@db.execute('SELECT * FROM cashiers') do |op|
       rows << op
     end
-    # rows << [cotacao, total_dolar, total_real]
     table = Terminal::Table.new title: 'Caixa', headings: %w[ID Data Nome Cotação Dolares Reais], rows: rows
     puts table
     @@db.close
